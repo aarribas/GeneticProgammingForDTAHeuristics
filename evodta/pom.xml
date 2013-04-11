@@ -5,4 +5,16 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>evodta</name>
   <description>evodta - thesis 2012/13</description>
+  <dependencies>
+  	<dependency>
+  		<groupId>gpdta</groupId>
+  		<artifactId>gpdtaid</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.github.rinde</groupId>
+  		<artifactId>rinecj</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>
