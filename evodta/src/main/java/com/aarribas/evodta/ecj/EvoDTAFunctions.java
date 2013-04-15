@@ -14,8 +14,14 @@ import rinde.ecj.GenericFunctions.Mul;
 import rinde.ecj.GenericFunctions.Pow;
 import rinde.ecj.GenericFunctions.Sub;
 import com.aarribas.evodta.ecj.EvoDTAEvaluator.ExampleContext;
+import com.aarribas.evodta.ecj.functions.EvoDTAAdditionalFunctions.If2;
 
 public class EvoDTAFunctions extends GPFuncSet<ExampleContext> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -887686900221451629L;
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<GPFunc<ExampleContext>> create() {
@@ -27,6 +33,7 @@ public class EvoDTAFunctions extends GPFuncSet<ExampleContext> {
 				new Div<ExampleContext>(), /* */
 				new Mul<ExampleContext>(), /* */
 				new Pow<ExampleContext>(),
+	
 				/* CONSTANTS */
 				new Constant<ExampleContext>(1), /* */
 				new Constant<ExampleContext>(0), /* */

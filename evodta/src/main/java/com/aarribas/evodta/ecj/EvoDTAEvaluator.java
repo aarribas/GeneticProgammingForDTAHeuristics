@@ -11,21 +11,26 @@ import rinde.ecj.GPBaseNode;
 import rinde.ecj.GPEvaluator;
 import rinde.ecj.GPProgram;
 import rinde.ecj.GPProgramParser;
+
+import com.aarribas.dtasim.TrafficSimulator;
+import com.aarribas.dtasim.TrafficSwappingHeuristic;
+import com.aarribas.dtasim.TrafficSwappingHeuristicMSA;
+import com.aarribas.evodta.TrafficSwappingHeuristicGP;
 import com.aarribas.evodta.ecj.EvoDTAEvaluator.ExampleContext;
-import com.aarribas.evodta.ecj.EvoDTAEvaluator.ExampleTask;
+import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTATask;
 import rinde.jppf.ComputationTask;
 import ec.EvolutionState;
 import ec.gp.GPTree;
 
 
-public class EvoDTAEvaluator extends GPEvaluator<ExampleTask, DefaultResult, GPProgram<ExampleContext>> {
+public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, DefaultResult, GPProgram<ExampleContext>> {
 
 	@Override
-	protected Collection<ExampleTask> createComputationJobs(DataProvider dataProvider, GPTree[] trees,
+	protected Collection<EvoDTATask> createComputationJobs(DataProvider dataProvider, GPTree[] trees,
 			EvolutionState state) {
 		final GPProgram<ExampleContext> prog = GPProgramParser
 				.convertToGPProgram((GPBaseNode<ExampleContext>) trees[0].child);
-		return asList(new ExampleTask(prog));
+		return asList(new EvoDTATask(prog));
 	}
 
 	@Override
@@ -33,13 +38,22 @@ public class EvoDTAEvaluator extends GPEvaluator<ExampleTask, DefaultResult, GPP
 		return 1;
 	}
 
-	public static class ExampleTask extends ComputationTask<DefaultResult, GPProgram<ExampleContext>> {
+	public static class EvoDTATask extends ComputationTask<DefaultResult, GPProgram<ExampleContext>> {
 
-		public ExampleTask(GPProgram<ExampleContext> p) {
+		public EvoDTATask(GPProgram<ExampleContext> p) {
 			super(p);
 		}
 
 		public void run() {
+			
+			TrafficSimulator sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
+			
+			
+			//create a swapping heuristic
+			TrafficSwappingHeuristic  heuristic = new TrafficSwappingHeuristicGP();
+			
+			sim.runDTA(2, heuristic);
+			
 			double diff = 0;
 			for (int x = 0; x < 10; x++) {
 				for (int y = 0; y < 10; y++) {
