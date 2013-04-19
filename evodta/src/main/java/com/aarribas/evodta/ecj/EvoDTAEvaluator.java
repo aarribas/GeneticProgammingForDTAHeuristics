@@ -50,8 +50,8 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, DefaultResult, GPPr
 			
 			
 			//create a swapping heuristic
-			TrafficSwappingHeuristic  heuristic = new TrafficSwappingHeuristicGP();
-			
+			TrafficSwappingHeuristicGP  heuristic = new TrafficSwappingHeuristicGP();
+			heuristic.setupGenParams(this);
 			sim.runDTA(2, heuristic);
 			
 			double diff = 0;
