@@ -22,12 +22,21 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	private EvoDTATask task;
 
-	//some structures required to complex parameters for the GP evolution
+	//some structures required to pass complex parameters to the GP Context
 	private  ArrayList<ArrayList<Double[]>> costPerRoute;
 	private  ArrayList<ArrayList<Double[]>> cumulativeOfDeltas;
 	private  ArrayList<int[]> numOptimalRtsPerOD;
 	private  ArrayList<int[]> indexOptimalRtPerOD;
 	private  ArrayList<double[]> minDemandPerOD;
+	
+	private double error;
+	
+	public enum GPStatus {
+		GP_STATUS_NORMAL,
+		GP_STATUS_ABORTED
+	}
+	
+	private GPStatus gpStatus;
 
 
 	public void setup(ArrayList< ArrayList<PathRepresentation>> oldRoutes,
@@ -66,13 +75,16 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 				//temp fractions
 				Double[] tempFractions = new Double[newRouteFractions.get(setOfRoutesIndex).get(fractionsIndex).length];
 
-				//already seen route
+				
 				if(fractionsIndex < oldRouteFractions.get(setOfRoutesIndex).size()){
-
+					
+					//the following applies to routes already seen 
 					for(int fracIndex = 0; fracIndex < newRouteFractions.get(setOfRoutesIndex).get(fractionsIndex).length; fracIndex++ ){
 
-						//compute correction only if the route fraction is not optimal
+						//compute correction only if the route fraction is not optimal (newRoutefrac = 1 indicates it is optimal)
 						if(newRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex] != 1){
+							
+							double rtFrac = oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex];
 
 							//compute the cost difference between this route and the optimal route
 							double normCostDiff = costPerRoute.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex] - 
@@ -91,30 +103,40 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 							double delta;
 							if(cumulativeOfDeltas == null){
 
-								delta = task.getTaskData().compute(new EvoDTAContext(oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex],
+								delta = task.getTaskData().compute(new EvoDTAContext(rtFrac,
 										minDemandPerOD.get(setOfRoutesIndex)[fracIndex], 1.0/(double)iteration,  normCostDiff, 0.0));
 							}
 							else{
-								delta = task.getTaskData().compute(new EvoDTAContext(oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex],
+								delta = task.getTaskData().compute(new EvoDTAContext(rtFrac,
 										minDemandPerOD.get(setOfRoutesIndex)[fracIndex], 1.0/(double)iteration,  normCostDiff, cumulativeOfDeltas.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex]));
 
 							}
 							
-							//limit the correction to some common sense values
+							//VALIDATION CHECK!
+							//if the delta is beyond twice the maximum possible rtFrac then stop 
+							// save null routes and routeFractions and return
+							if(Math.abs(delta) > 2*rtFrac){
+								setError(delta);
+								finalRoutes = null;
+								finalRouteFractions = null;
+								return;
+							}
+							
+							//Otherwise simply limit the correction to some common sense values
 							if(delta < 0){
 								//min route swapping is 0
 								delta = 0;
 							}
-							else if(delta > oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex]){
+							else if(delta > rtFrac){
 								//maximum route swapping is the current traffic on that route
-								delta = oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex];
+								delta = rtFrac;
 							}
 
 							//add current delta to the cumulative of deltas
 							saveDeltaForARouteAndTime(setOfRoutesIndex, fractionsIndex, fracIndex, delta);
 
 							//save the new route fraction
-							tempFractions[fracIndex] = oldRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex] - delta;
+							tempFractions[fracIndex] = rtFrac - delta;
 
 							//update the cumulativeOfRouteFractions
 							cumulativeOfRouteFractions[fracIndex] = cumulativeOfRouteFractions[fracIndex] + tempFractions[fracIndex];
@@ -123,36 +145,11 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 				}
 				else{
-
-					//new route
-					for(int fracIndex = 0; fracIndex < newRouteFractions.get(setOfRoutesIndex).get(fractionsIndex).length; fracIndex++ ){
-
-
-
-						//
-						//CHECK HERE THAT IT IS ALWAYS 1!!!
-						// TODO
-
-
-						//
-						//CHECK HERE THAT IT IS ALWAYS 1!!!
-						// TODO
-
-
-						//
-						//CHECK HERE THAT IT IS ALWAYS 1!!!
-						// TODO
-
-
-						//
-						//CHECK HERE THAT IT IS ALWAYS 1!!!
-						// TODO
-
-
-						//a new route that is unseen has no correction
-						//tempFractions[fracIndex] =  (1/iteration)*newRouteFractions.get(setOfRoutesIndex).get(fractionsIndex)[fracIndex];
-
-					}
+					//NEW ROUTE!
+					
+					//for new routes if the route is not optimal the "old and new" fractions are 0 
+					//there is no traffic to swap in any case.
+					//if the route is optimal it is treated in several lines below
 
 				}
 
@@ -226,10 +223,9 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 		costPerRoute =  new ArrayList<ArrayList<Double[]>>();
 
 		//for all routes compute and save the cost!
-		for(int setOfRoutesIndex = 0; setOfRoutesIndex< oldRoutes.size(); setOfRoutesIndex++){
-			for(int routeIndex = 0; routeIndex< oldRoutes.get(setOfRoutesIndex).size(); routeIndex++){
-
-
+		for(int setOfRoutesIndex = 0; setOfRoutesIndex< newRoutes.size(); setOfRoutesIndex++){
+			for(int routeIndex = 0; routeIndex< newRoutes.get(setOfRoutesIndex).size(); routeIndex++){
+				
 				PathRepresentation path = oldRoutes.get(setOfRoutesIndex).get(routeIndex);
 
 				int[] linkIndexes = path.linkIndexes;
@@ -306,6 +302,22 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 		this.task = task;
 
+	}
+
+	public double getError() {
+		return error;
+	}
+
+	public void setError(double error) {
+		this.error = error;
+	}
+
+	public GPStatus getGpStatus() {
+		return gpStatus;
+	}
+
+	public void setGpStatus(GPStatus gpStatus) {
+		this.gpStatus = gpStatus;
 	}
 
 }
