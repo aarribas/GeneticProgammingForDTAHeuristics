@@ -65,7 +65,7 @@ public class EvoDTAStats extends Statistics{
 		float totalSumSq2 = 0;
 
 		Individual best_i = null; // quiets compiler complaints
-		for (int y = 1; y < state.population.subpops[0].individuals.length; y++) {
+		for (int y = 0; y < state.population.subpops[0].individuals.length; y++) {
 			if (best_i == null || state.population.subpops[0].individuals[y].fitness.betterThan(best_i.fitness)) {
 				best_i = state.population.subpops[0].individuals[y];
 			}
@@ -99,7 +99,7 @@ public class EvoDTAStats extends Statistics{
 
 		//save the best individual
 		Individual best_i = null; // quiets compiler complaints
-		for (int y = 1; y < state.population.subpops[0].individuals.length; y++) {
+		for (int y = 0; y < state.population.subpops[0].individuals.length; y++) {
 			if (best_i == null || state.population.subpops[0].individuals[y].fitness.betterThan(best_i.fitness)) {
 				best_i = state.population.subpops[0].individuals[y];
 			}

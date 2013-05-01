@@ -13,47 +13,89 @@ import rinde.ecj.GenericFunctions.If4;
 import rinde.ecj.GenericFunctions.Mul;
 import rinde.ecj.GenericFunctions.Pow;
 import rinde.ecj.GenericFunctions.Sub;
-import com.aarribas.evodta.ecj.EvoDTAEvaluator.ExampleContext;
-import com.aarribas.evodta.ecj.functions.EvoDTAAdditionalFunctions.If2;
+import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
 
-public class EvoDTAFunctions extends GPFuncSet<ExampleContext> {
-	/**
-	 * 
-	 */
+public class EvoDTAFunctions extends GPFuncSet<EvoDTAContext> {
+
 	private static final long serialVersionUID = -887686900221451629L;
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<GPFunc<ExampleContext>> create() {
+	public Collection<GPFunc<EvoDTAContext>> create() {
 		return newArrayList(
 		/* GENERIC FUNCTIONS */
-		new If4<ExampleContext>(), /* */
-				new Add<ExampleContext>(), /* */
-				new Sub<ExampleContext>(), /* */
-				new Div<ExampleContext>(), /* */
-				new Mul<ExampleContext>(), /* */
-				new Pow<ExampleContext>(),
+		new If4<EvoDTAContext>(), /* */
+				new Add<EvoDTAContext>(), /* */
+				new Sub<EvoDTAContext>(), /* */
+				new Div<EvoDTAContext>(), /* */
+				new Mul<EvoDTAContext>(), /* */
+				new Pow<EvoDTAContext>(), /* */
 	
 				/* CONSTANTS */
-				new Constant<ExampleContext>(1), /* */
-				new Constant<ExampleContext>(0), /* */
+				new Constant<EvoDTAContext>(1), /* */
+				new Constant<EvoDTAContext>(0), /* */
 				/* PROBLEM SPECIFIC VARIABLES */
-				new X(), new Y());
-
+				new CDEMAND(), new ODEMAND(),
+				new INVITERATION(), new NORMCOSTDIFF(),
+				new CUMUDELTA());
+		
 	}
 
-	public static class X extends GPFunc<ExampleContext> {
+	public static class CDEMAND extends GPFunc<EvoDTAContext> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7472539582231934098L;
+
 		@Override
-		public double execute(double[] input, ExampleContext context) {
-			return context.x;
+		public double execute(double[] input, EvoDTAContext context) {
+			return context.cDemand;
 		}
 	}
 
-	public static class Y extends GPFunc<ExampleContext> {
+	public static class ODEMAND extends GPFunc<EvoDTAContext> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -6464361580236464741L;
+
 		@Override
-		public double execute(double[] input, ExampleContext context) {
-			return context.y;
+		public double execute(double[] input, EvoDTAContext context) {
+			return context.oDemand;
 		}
 	}
+	public static class INVITERATION extends GPFunc<EvoDTAContext> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 9133189122070147488L;
+
+		@Override
+		public double execute(double[] input, EvoDTAContext context) {
+			return context.invIteration;
+		}
+	}
+	public static class NORMCOSTDIFF extends GPFunc<EvoDTAContext> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 173210137270918269L;
+
+		@Override
+		public double execute(double[] input, EvoDTAContext context) {
+			return context.normCostDiff;
+		}
+	}
+	public static class CUMUDELTA extends GPFunc<EvoDTAContext> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1002355814725210658L;
+
+		@Override
+		public double execute(double[] input, EvoDTAContext context) {
+			return context.cumuDelta;
+		}
+	}	
 
 }

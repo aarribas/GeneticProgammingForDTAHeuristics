@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import org.jppf.task.storage.DataProvider;
 
-import rinde.ecj.DefaultResult;
 import rinde.ecj.GPBaseNode;
 import rinde.ecj.GPEvaluator;
 import rinde.ecj.GPProgram;
@@ -22,7 +21,7 @@ import ec.EvolutionState;
 import ec.gp.GPTree;
 
 
-public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, DefaultResult, GPProgram<EvoDTAContext>> {
+public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPProgram<EvoDTAContext>> {
 
 	@Override
 	protected Collection<EvoDTATask> createComputationJobs(DataProvider dataProvider, GPTree[] trees,
@@ -37,7 +36,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, DefaultResult, GPPr
 		return 1;
 	}
 
-	public static class EvoDTATask extends ComputationTask<DefaultResult, GPProgram<EvoDTAContext>> {
+	public static class EvoDTATask extends ComputationTask<EvoDTAResult, GPProgram<EvoDTAContext>> {
 		private TrafficSimulator sim;
 		TrafficSwappingHeuristicGP heuristic;
 		private float fitness;
@@ -73,7 +72,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, DefaultResult, GPPr
 				sim.runDTA(1, heuristic);
 				updateFitness(3); 
 			}
-			setResult(new DefaultResult(fitness, taskData.getId()));
+			setResult(new EvoDTAResult(fitness, taskData.getId()));
 		}
 
 		public boolean updateFitness(int testNumber){
