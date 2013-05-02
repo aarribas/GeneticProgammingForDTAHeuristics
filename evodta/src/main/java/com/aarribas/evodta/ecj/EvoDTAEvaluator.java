@@ -52,26 +52,26 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
 			heuristic = new TrafficSwappingHeuristicGP();
 			heuristic.setupGenParams(this);
-			sim.runDTA(1, heuristic);
+			sim.runDTA(20, heuristic);
 			updateFitness(1); 
 
-			//2d test
-			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
-				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
-				heuristic = new TrafficSwappingHeuristicGP();
-				heuristic.setupGenParams(this);
-				sim.runDTA(1, heuristic);
-				updateFitness(2); 
-			}
-
-			//3rd test
-			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
-				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
-				heuristic = new TrafficSwappingHeuristicGP();
-				heuristic.setupGenParams(this);
-				sim.runDTA(1, heuristic);
-				updateFitness(3); 
-			}
+//			//2d test
+//			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
+//				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
+//				heuristic = new TrafficSwappingHeuristicGP();
+//				heuristic.setupGenParams(this);
+//				sim.runDTA(1, heuristic);
+//				updateFitness(2); 
+//			}
+//
+//			//3rd test
+//			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
+//				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
+//				heuristic = new TrafficSwappingHeuristicGP();
+//				heuristic.setupGenParams(this);
+//				sim.runDTA(1, heuristic);
+//				updateFitness(3); 
+//			}
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
 		}
 
