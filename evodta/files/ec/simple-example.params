@@ -5,7 +5,7 @@ gp.fs.0 = com.aarribas.evodta.ecj.EvoDTAFunctions
 
 seed.0 = 123
 
-pop.subpop.0.size 	= 25
+pop.subpop.0.size 	= 51
 generations 		= 1000
 
 # either 'local' or 'distributed' (this can only be used if a JPPF server is setup, etc)

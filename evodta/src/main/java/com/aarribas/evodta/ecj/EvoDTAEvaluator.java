@@ -37,8 +37,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 	}
 
 	public static class EvoDTATask extends ComputationTask<EvoDTAResult, GPProgram<EvoDTAContext>> {
-		private TrafficSimulator sim;
-		TrafficSwappingHeuristicGP heuristic;
+	
 		private float fitness;
 
 		public EvoDTATask(GPProgram<EvoDTAContext> p) {
@@ -48,12 +47,16 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 
 		public void run() {
 
+			//change this to avoid leaks
+			TrafficSimulator sim;
+			TrafficSwappingHeuristicGP heuristic;
+			
 			//first test
 			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
 			heuristic = new TrafficSwappingHeuristicGP();
 			heuristic.setupGenParams(this);
 			sim.runDTA(20, heuristic);
-			updateFitness(1); 
+			updateFitness(1, heuristic, sim); 
 
 //			//2d test
 //			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
@@ -75,7 +78,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
 		}
 
-		public boolean updateFitness(int testNumber){
+		public boolean updateFitness(int testNumber,TrafficSwappingHeuristicGP heuristic, TrafficSimulator sim ){
 			
 			//if aborted set the max fitness minus a correction depending on the error
 			if(heuristic.getGpStatus() == GPStatus.GP_STATUS_ABORTED){
