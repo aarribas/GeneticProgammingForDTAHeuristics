@@ -1,12 +1,14 @@
 package com.aarribas.evodta;
 
 import com.aarribas.dtasim.*;
+
 import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
 import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTATask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import com.aarribas.traffictools.PathRepresentation;
 import com.aarribas.traffictools.TravelTimeManager;
@@ -22,6 +24,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	private double iteration;
 
+	private TrafficSimulator sim;
 	private EvoDTATask task;
 
 	//some structures required to pass complex parameters to the GP Context
@@ -34,12 +37,39 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	private double error;
 
+	private boolean firstRun;
+	private boolean negativeDeltas;
+	private boolean normalisationRequired;
+
+	private Double minDelta = null;
+	private Double maxDelta = null;
+
 	public enum GPStatus {
 		GP_STATUS_NORMAL,
-		GP_STATUS_ABORTED
+		GP_STATUS_ABORTED,
+		GP_STATUS_ABORTED_INCREASING_GAP,
+		GP_STATUS_ABORTED_GAP_STALLED,
+		GP_STATUS_ABORTED_AVG_GAP_STALLED,
+		GP_STATUS_ABORTED_ZERO_DELTA
 	}
 
 	private GPStatus gpStatus;
+
+	private double lastGap;
+	private double avgGapOver2Runs;
+	private int increasingGapCounter;
+	private int sameGapCounter;
+	private boolean computeAverage;
+
+	public TrafficSwappingHeuristicGP(){
+		super();
+		firstRun = true;
+		increasingGapCounter = 0;
+		sameGapCounter = 0;
+		avgGapOver2Runs = Double.MAX_VALUE;
+		computeAverage = true;
+		gpStatus = GPStatus.GP_STATUS_NORMAL;
+	}
 
 
 	public void setup(ArrayList< ArrayList<PathRepresentation>> oldRoutes,
@@ -55,7 +85,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	}
 
-	private void computeShortestRtFrac(){
+	private void computeShortestRtFracId(){
 
 		shortestRouteDemand = new ArrayList<HashMap<Integer,Double>>();
 
@@ -64,12 +94,12 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 			HashMap<Integer,Double> demand = new HashMap<Integer,Double>();
 
 			for(int timeClick = 0; timeClick < (int)(tEnd/tStep); timeClick =  timeClick + timeClicksOfRouteInterval  ){
-				
+
 				for(int routeIndex = 0; routeIndex < newRouteFractions.get(ODPairIndex).size(); routeIndex++ ){
-					
+
 					//save the route frac for the shortest route (new rtFrac = 1)
 					if(newRouteFractions.get(ODPairIndex).get(routeIndex)[timeClick] == 1.0){
-						
+
 						//if is an old route used the old rtFrac otherwise we know the rtFrac is 0
 						if(oldRouteFractions.get(ODPairIndex).size() > routeIndex){
 							demand.put(timeClick, oldRouteFractions.get(ODPairIndex).get(routeIndex)[timeClick]);
@@ -77,7 +107,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 						else{
 							demand.put(timeClick, 0.0);
 						}
-						
+
 						break;
 					}
 				}
@@ -87,18 +117,268 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 			shortestRouteDemand.add(demand);
 		}
 	}
-	
+
 
 	public void run(){
 
-		//compute costs for all routes
-		updateCostsPerRoute();
+		//update las gap and counters - may abort if the gap is not progressing adequately
+		saveGapAndUpdateCounters();
 
-		//compute number of optimal routes and the minimum cost -so far- per ODPair
-		computeMinCost();
+		if(gpStatus == GPStatus.GP_STATUS_NORMAL){
 
-		//compute the id for the shortest route per OD and time
-		computeShortestRtFrac();
+			//compute costs for all routes
+			updateCostsPerRoute();
+
+			//compute number of optimal routes and the minimum cost -so far- per ODPair
+			computeMinCost();
+
+			//compute the id for the shortest route per OD and time
+			computeShortestRtFracId();
+
+			if(firstRun){
+				checkForValidityAndNormalise();
+				firstRun = false;
+			}
+
+			if(gpStatus == GPStatus.GP_STATUS_NORMAL){
+				computeNewRouteFractions();
+			}
+			else{
+				return;
+			}
+		}
+		else{
+			return;
+		}
+
+	}
+
+	public void saveGapAndUpdateCounters(){
+
+		//first we check if the gap has been increasing
+		if(sim.getGap() > lastGap){
+			increasingGapCounter++;
+		}
+		else{
+			increasingGapCounter = 0;
+		}
+
+		//if the gap has been increasing for more than 10 iterations, it is time to abort
+		if(increasingGapCounter > 10){
+			abort(GPStatus.GP_STATUS_ABORTED_INCREASING_GAP);
+		}
+
+		//now we check if the gap is stalled
+		if(sim.getGap() == lastGap){
+			sameGapCounter++;
+		}
+		else{
+			sameGapCounter = 0;
+		}
+		if(sameGapCounter > 3){
+			abort(GPStatus.GP_STATUS_ABORTED_GAP_STALLED);
+		}
+
+		//finally we check if the avg speed hasn't changed for a while
+		if(!firstRun){
+
+			double average; 
+
+			if(computeAverage == true){
+				average = (lastGap + sim.getGap()) /2;
+				computeAverage = false;
+				if(average == avgGapOver2Runs){
+					//if avg has not changed we abort
+					abort(GPStatus.GP_STATUS_ABORTED_AVG_GAP_STALLED);
+				}
+				else{
+					//otherwise we update the avg
+					avgGapOver2Runs = average;
+				}
+			}
+			else{
+				computeAverage = true;
+			}
+
+		}
+
+		//and save the current gap
+		lastGap = sim.getGap();
+
+	}
+
+	public void checkForValidityAndNormalise(){
+
+		int numNegativeDeltas = 0;
+		int numPositiveDeltas = 0;
+
+		//we compute tentatively all the deltas to check for validity and to normalise
+		for(int ODPairIndex = 0; ODPairIndex< newRouteFractions.size(); ODPairIndex++){
+
+			//we start at the interval 0
+			int interval = 0;
+			int timeClick = timeClicksOfRouteInterval*interval; //equals timeClickShift of course
+
+			//the following applies to routes already seen 
+			while( timeClick < (int) (tEnd/tStep)){
+
+				//first go through the all routes and compute the new routeFractions for the non optimal or just save an uninitialized array for the optimal
+				for(int routeIndex = 0; routeIndex < newRouteFractions.get(ODPairIndex).size(); routeIndex++ ){
+
+					if(routeIndex < oldRouteFractions.get(ODPairIndex).size()){
+
+						//compute correction only if the cost is not minimal for this route and instant
+						//						if(newRouteFractions.get(ODPairIndex).get(routeIndex)[timeClick] != 1.0){
+						if(newRouteFractions.get(ODPairIndex).get(routeIndex)[timeClick] != 1){
+
+							//get the rtFrac
+							double rtFrac = oldRouteFractions.get(ODPairIndex).get(routeIndex)[timeClick];
+
+							//compute the cost difference between this route and the optimal route
+							double normCostDiff = (costPerRoute.get(ODPairIndex).get(routeIndex).get(timeClick) - 
+									minCostPerOD.get(ODPairIndex).get(timeClick));
+
+							//normalize
+							normCostDiff = normCostDiff / costPerRoute.get(ODPairIndex).get(routeIndex).get(timeClick) ;
+
+							//=>compute delta starts here
+							double delta= 0.0;
+
+							if(normCostDiff > 0){
+
+								if(cumulativeOfDeltas == null || ODPairIndex >= cumulativeOfDeltas.size()){
+
+									delta = task.getTaskData().compute(new EvoDTAContext(rtFrac,
+											shortestRouteDemand.get(ODPairIndex).get(timeClick), 1.0/(double)iteration,  normCostDiff, 0.0));
+								}
+								else{
+									if(routeIndex >= cumulativeOfDeltas.get(ODPairIndex).size()){
+										delta = task.getTaskData().compute(new EvoDTAContext(rtFrac,
+												shortestRouteDemand.get(ODPairIndex).get(timeClick), 1.0/(double)iteration,  normCostDiff, 0.0));
+									}
+									else{
+
+										delta = task.getTaskData().compute(new EvoDTAContext(rtFrac,
+												shortestRouteDemand.get(ODPairIndex).get(timeClick), 1.0/(double)iteration,  normCostDiff, cumulativeOfDeltas.get(ODPairIndex).get(routeIndex)));
+									}
+								}
+
+
+
+								//add count to the proper sign counter
+								if(delta < 0){
+									numNegativeDeltas++;
+								}
+								else if(delta > 0){
+									numPositiveDeltas++;
+								}
+
+								//save min and max
+								if(minDelta == null && maxDelta == null){
+									minDelta = delta;
+									maxDelta = delta;
+								}
+								else{
+									if(delta < minDelta){
+										minDelta = delta;
+									}
+									if(delta > maxDelta){
+										maxDelta = delta;
+									}
+								}
+							}
+
+						}
+
+					}
+				}
+
+				//move to the next route interval
+				interval++;
+				timeClick = timeClicksOfRouteInterval*interval; 
+			}
+		}
+
+		//set the sign
+		if(numPositiveDeltas == 0 && numNegativeDeltas == 0) {
+			abort(GPStatus.GP_STATUS_ABORTED_ZERO_DELTA);
+			return;
+		}
+		else if (numNegativeDeltas > numPositiveDeltas){
+			negativeDeltas = true;
+		}
+		else{
+			negativeDeltas = false;
+		}
+
+		//check if normalisation  is required
+		if(negativeDeltas == false)
+		{
+			if(maxDelta > 1.0 || minDelta < 0){
+				normalisationRequired = true;
+			}
+			else{
+				normalisationRequired = false;
+			}
+		}
+		else{
+			if(minDelta < -1 || maxDelta > 0)
+			{
+				normalisationRequired = true;
+			}
+			else{
+				normalisationRequired = false;
+				
+			}
+		}
+	}
+
+
+	private void abort(GPStatus msg){
+
+		gpStatus = msg;
+
+		switch(msg){
+		case GP_STATUS_ABORTED_AVG_GAP_STALLED : System.out.println("AVG STALLED"); break;
+		case GP_STATUS_ABORTED_GAP_STALLED : System.out.println("STALLED"); break;
+		case GP_STATUS_ABORTED_INCREASING_GAP : System.out.println("INCREASING GAP"); break;
+		case GP_STATUS_ABORTED_ZERO_DELTA : System.out.println("ZERO DELTA"); break;
+		default:
+			break;
+		}
+
+		finalRoutes = null;
+		finalRouteFractions = null;
+		return;
+	}
+
+	private double normalise(double delta){
+		
+		double newDelta;
+
+		if(minDelta.doubleValue() == maxDelta.doubleValue()){
+			
+				newDelta = delta/maxDelta;
+			
+		}
+		else{
+
+			if(negativeDeltas == false){
+
+				newDelta = (delta - minDelta) / (maxDelta - minDelta);
+
+			}
+			else{
+
+				newDelta = (delta - maxDelta) / (minDelta - maxDelta);
+			}
+		}
+
+		return newDelta;
+
+	}
+
+	public void computeNewRouteFractions(){
 
 		//initiliaze the structure to save the routeFractions
 		ArrayList< ArrayList<Double[]>> tempRouteFractions = generateEmptyRouteFractions(); 
@@ -172,17 +452,11 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 									}
 								}
 
-								//VALIDATION CHECK!
-								//if the delta is beyond twice the maximum possible rtFrac then stop 
-								// save null routes and routeFractions and return
-								if(Math.abs(delta) > 2*rtFrac){
-									setError(delta);
-									finalRoutes = null;
-									finalRouteFractions = null;
-									return;								
+
+								if(normalisationRequired  == true){
+									delta = normalise(delta);
 								}
 
-								//to be compliant with the DEC article (helps to compare the code)
 								delta = -delta;
 
 								//=>compute delta ends here
@@ -198,7 +472,6 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 									delta = -rtFrac;
 
 								}
-
 
 								tempRouteFrac = (rtFrac + delta);
 
@@ -281,7 +554,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 		//save finalRoutes and finalRouteFractions
 		finalRoutes = cloneRoutes(newRoutes);
 		finalRouteFractions = tempRouteFractions;
-		
+
 	}
 
 
@@ -456,8 +729,9 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	}
 
-	public void setupGenParams(EvoDTATask task){
+	public void setupGenParams(TrafficSimulator sim, EvoDTATask task){
 
+		this.sim = sim;
 		this.task = task;
 
 	}

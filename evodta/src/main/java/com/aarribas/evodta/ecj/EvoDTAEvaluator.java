@@ -52,11 +52,12 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			TrafficSwappingHeuristicGP heuristic;
 			
 			//first test
-			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004, 50);
+			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50);
 			heuristic = new TrafficSwappingHeuristicGP();
-			heuristic.setupGenParams(this);
-			sim.runDTA(20, heuristic);
-			sim.displayRouteFractionPerRouteInterval();
+			heuristic.setupGenParams(sim, this);
+			sim.runDTA(30, heuristic);
+//			sim.displayRouteFractionPerRouteInterval();
+//			sim.displayRouteTravelTimesPerRoute();
 			updateFitness(1, heuristic, sim); 
 
 //			//2d test
