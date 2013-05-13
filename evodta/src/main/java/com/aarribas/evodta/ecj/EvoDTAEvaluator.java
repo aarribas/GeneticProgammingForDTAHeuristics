@@ -3,6 +3,7 @@ package com.aarribas.evodta.ecj;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
+import java.util.Scanner;
 
 import org.jppf.task.storage.DataProvider;
 
@@ -52,13 +53,16 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			TrafficSwappingHeuristicGP heuristic;
 			
 			//first test
-			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50);
+			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50, TrafficSimulator.VERBOSITY.SILENT);
 			heuristic = new TrafficSwappingHeuristicGP();
 			heuristic.setupGenParams(sim, this);
 			sim.runDTA(30, heuristic);
-//			sim.displayRouteFractionPerRouteInterval();
-//			sim.displayRouteTravelTimesPerRoute();
-			updateFitness(1, heuristic, sim); 
+			float fitness1 = computeFitness(heuristic, sim); 
+			
+		//	sim.displayRouteFractionPerRouteInterval();
+		//	sim.displayRouteTravelTimesPerRoute();
+		
+
 
 //			//2d test
 //			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
@@ -77,32 +81,35 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 //				sim.runDTA(1, heuristic);
 //				updateFitness(3); 
 //			}
+			
+			//temporal fitness
+			fitness = fitness1;
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
 		}
 
-		public boolean updateFitness(int testNumber,TrafficSwappingHeuristicGP heuristic, TrafficSimulator sim ){
+		public float computeFitness(TrafficSwappingHeuristicGP heuristic, TrafficSimulator sim ){
 			
-			//if aborted set the max fitness minus a correction depending on the error
-			if(heuristic.getGpStatus() == GPStatus.GP_STATUS_ABORTED){
+			//if aborted set the max fitness
+			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_NORMAL){
 				
-				fitness = (float) (Float.MAX_VALUE - 1.0/heuristic.getError());
-				return false;
-
-			} //otherwise the fitness is the iteration + the gap (max iteration might have being attained prior to convergence)
+				return Float.MAX_VALUE;
+			} 
 			else{
 				if (Double.isInfinite(sim.getGap()) || Double.isNaN(sim.getGap())) {
-					fitness =  Float.MAX_VALUE;
-					return false;
+					return Float.MAX_VALUE;
 				}
 				else{
-					switch(testNumber){
-					case 1: fitness = (float) ((double) sim.getIteration() + sim.getGap());break; 
-					case 2: 
-					case 3: 
-					default:
-						fitness = fitness >  (float) ((double) sim.getIteration() + sim.getGap()) ? fitness :  (float) ((double) sim.getIteration() + sim.getGap()); break;
+					
+					
+					//if the progression was negative assign max fitness
+					if(sim.getGap() > heuristic.getFirstGap()){
+						return Float.MAX_VALUE;
 					}
-					return true;
+					
+//					System.out.println(heuristic.getFirstGap() + " " + sim.getIteration() + " " +  sim.getGap());
+					
+					//otherwise compute the fitness as the difference between the given progressino and best possible progression.		
+					return (float) (sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (3.0/heuristic.getFirstGap()));
 				}
 			}
 

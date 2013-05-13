@@ -8,7 +8,6 @@ import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTATask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Scanner;
 
 import com.aarribas.traffictools.PathRepresentation;
 import com.aarribas.traffictools.TravelTimeManager;
@@ -54,7 +53,8 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 	}
 
 	private GPStatus gpStatus;
-
+	
+	private double firstGap;
 	private double lastGap;
 	private double avgGapOver2Runs;
 	private int increasingGapCounter;
@@ -136,6 +136,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 			computeShortestRtFracId();
 
 			if(firstRun){
+				firstGap = sim.getGap();
 				checkForValidityAndNormalise();
 				firstRun = false;
 			}
@@ -750,6 +751,10 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	public void setGpStatus(GPStatus gpStatus) {
 		this.gpStatus = gpStatus;
+	}
+	
+	public double getFirstGap(){
+		return firstGap;
 	}
 
 }
