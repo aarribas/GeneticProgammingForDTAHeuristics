@@ -22,6 +22,14 @@ import ec.EvolutionState;
 import ec.gp.GPTree;
 
 
+/**
+ * EvoDTAEvaluator is the class that contains the evaluation logic. Each individual will run its own EvoDTATask,
+ * EvoDTATask contains the code to launch the simulator, run the simulator with different networks and compute
+ * the fitness.
+ * 
+ * @author andresaan
+ *
+ */
 public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPProgram<EvoDTAContext>> {
 
 	@Override
@@ -48,7 +56,6 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 
 		public void run() {
 
-			//change this to avoid leaks
 			TrafficSimulator sim;
 			TrafficSwappingHeuristicGP heuristic;
 			
@@ -105,8 +112,6 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					if(sim.getGap() > heuristic.getFirstGap()){
 						return Float.MAX_VALUE;
 					}
-					
-//					System.out.println(heuristic.getFirstGap() + " " + sim.getIteration() + " " +  sim.getGap());
 					
 					//otherwise compute the fitness as the difference between the given progressino and best possible progression.		
 					return (float) (sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (3.0/heuristic.getFirstGap()));
