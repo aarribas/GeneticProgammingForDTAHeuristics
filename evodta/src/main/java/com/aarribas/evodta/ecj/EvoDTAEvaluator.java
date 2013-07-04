@@ -58,39 +58,43 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 
 			TrafficSimulator sim;
 			TrafficSwappingHeuristicGP heuristic;
-			
+			float cumulativeFitness = 0;
 			//first test
-			sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50, TrafficSimulator.VERBOSITY.SILENT);
-			heuristic = new TrafficSwappingHeuristicGP();
-			heuristic.setupGenParams(sim, this);
-			sim.runDTA(30, heuristic);
-			float fitness1 = computeFitness(heuristic, sim); 
-			
+			//sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50, TrafficSimulator.VERBOSITY.SILENT);
+			for(int network = 1;  network < 6; network++ ){
+				//simulate one network per iteration
+				switch(network){
+				case 1: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 2: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net2.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 3: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net3.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 4: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net4.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 5: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				default: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				}
+				
+				heuristic = new TrafficSwappingHeuristicGP();
+				heuristic.setupGenParams(sim, this);
+				sim.runDTA(300, heuristic);
+				float tfitness = computeFitness(heuristic, sim); 
+				
+				if(tfitness == Float.MAX_VALUE ){
+					cumulativeFitness = tfitness;
+					break;
+				}
+				else{
+					cumulativeFitness += tfitness;
+				}
+			}
 		//	sim.displayRouteFractionPerRouteInterval();
 		//	sim.displayRouteTravelTimesPerRoute();
-		
-
-
-//			//2d test
-//			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
-//				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
-//				heuristic = new TrafficSwappingHeuristicGP();
-//				heuristic.setupGenParams(this);
-//				sim.runDTA(1, heuristic);
-//				updateFitness(2); 
-//			}
-//
-//			//3rd test
-//			if(heuristic.getGpStatus() != GPStatus.GP_STATUS_ABORTED){
-//				sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_par.mat", 3, 0.004);
-//				heuristic = new TrafficSwappingHeuristicGP();
-//				heuristic.setupGenParams(this);
-//				sim.runDTA(1, heuristic);
-//				updateFitness(3); 
-//			}
 			
 			//temporal fitness
-			fitness = fitness1;
+			if (cumulativeFitness == Float.MAX_VALUE){
+				fitness = Float.MAX_VALUE;
+			}
+			else{
+				fitness = cumulativeFitness / 5.0f;
+			}
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
 		}
 
@@ -109,12 +113,12 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					
 					
 					//if the progression was negative assign max fitness
-					if(sim.getGap() > heuristic.getFirstGap()){
+					if(sim.getGap() >= heuristic.getFirstGap()){
 						return Float.MAX_VALUE;
 					}
 					
 					//otherwise compute the fitness as the difference between the given progressino and best possible progression.		
-					return (float) (sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (3.0/heuristic.getFirstGap()));
+					return (float) (sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (2/heuristic.getFirstGap()));
 				}
 			}
 
