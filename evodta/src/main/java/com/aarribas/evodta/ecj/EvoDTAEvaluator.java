@@ -2,6 +2,9 @@ package com.aarribas.evodta.ecj;
 
 import static java.util.Arrays.asList;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Scanner;
 
@@ -52,10 +55,17 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 		public EvoDTATask(GPProgram<EvoDTAContext> p) {
 			super(p);
 			fitness = 0;
+
 		}
 
 		public void run() {
-
+			
+//		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+//		Calendar cal = Calendar.getInstance();
+//		System.out.println(dateFormat.format(cal.getTime()));
+//			
+			//System.out.println(Math.random());
+		
 			TrafficSimulator sim;
 			TrafficSwappingHeuristicGP heuristic;
 			float cumulativeFitness = 0;
@@ -69,7 +79,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 				case 3: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net3.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				case 4: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net4.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				case 5: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				default: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				default: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				}
 				
 				heuristic = new TrafficSwappingHeuristicGP();
@@ -93,9 +103,13 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 				fitness = Float.MAX_VALUE;
 			}
 			else{
+				
 				fitness = cumulativeFitness / 5.0f;
 			}
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
+//			dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+//			cal = Calendar.getInstance();
+//			System.out.println(dateFormat.format(cal.getTime()));
 		}
 
 		public float computeFitness(TrafficSwappingHeuristicGP heuristic, TrafficSimulator sim ){
@@ -116,9 +130,9 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					if(sim.getGap() >= heuristic.getFirstGap()){
 						return Float.MAX_VALUE;
 					}
-					
+				//	System.out.println(sim.getIteration() + " " + heuristic.getFirstGap() +  " " + sim.getGap());
 					//otherwise compute the fitness as the difference between the given progressino and best possible progression.		
-					return (float) (sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (2/heuristic.getFirstGap()));
+					return (float) ((sim.getIteration() / (heuristic.getFirstGap() - sim.getGap())  - (2/heuristic.getFirstGap())) / (2/heuristic.getFirstGap())) ;
 				}
 			}
 

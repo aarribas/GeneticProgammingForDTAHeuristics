@@ -87,8 +87,6 @@ public class EvoDTAStats extends Statistics{
 	@Override
 	public void finalStatistics(final EvolutionState state, int result){
 		
-		//TODO: modify to save the whole last generation in case I want to re-use the individuals.
-		
 		//we call the hook
 		super.finalStatistics(state, result);
 
