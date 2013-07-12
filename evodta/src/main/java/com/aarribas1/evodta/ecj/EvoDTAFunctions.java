@@ -1,4 +1,4 @@
-package com.aarribas.evodta.ecj;
+package com.aarribas1.evodta.ecj;
 
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -9,11 +9,11 @@ import rinde.ecj.GPFuncSet;
 import rinde.ecj.GenericFunctions.Add;
 import rinde.ecj.GenericFunctions.Constant;
 import rinde.ecj.GenericFunctions.Div;
-import rinde.ecj.GenericFunctions.If4;
+//import rinde.ecj.GenericFunctions.If4;
 import rinde.ecj.GenericFunctions.Mul;
 import rinde.ecj.GenericFunctions.Pow;
 import rinde.ecj.GenericFunctions.Sub;
-import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
+import com.aarribas1.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
 
 public class EvoDTAFunctions extends GPFuncSet<EvoDTAContext> {
 
@@ -24,7 +24,7 @@ public class EvoDTAFunctions extends GPFuncSet<EvoDTAContext> {
 	public Collection<GPFunc<EvoDTAContext>> create() {
 		return newArrayList(
 		/* GENERIC FUNCTIONS */
-		new If4<EvoDTAContext>(), /* */
+	
 				new Add<EvoDTAContext>(), /* */
 				new Sub<EvoDTAContext>(), /* */
 				new Div<EvoDTAContext>(), /* */

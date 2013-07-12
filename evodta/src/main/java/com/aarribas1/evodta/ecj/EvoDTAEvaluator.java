@@ -1,4 +1,4 @@
-package com.aarribas.evodta.ecj;
+package com.aarribas1.evodta.ecj;
 
 import static java.util.Arrays.asList;
 
@@ -16,10 +16,10 @@ import rinde.ecj.GPProgram;
 import rinde.ecj.GPProgramParser;
 
 import com.aarribas.dtasim.TrafficSimulator;
-import com.aarribas.evodta.TrafficSwappingHeuristicGP;
-import com.aarribas.evodta.TrafficSwappingHeuristicGP.GPStatus;
-import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
-import com.aarribas.evodta.ecj.EvoDTAEvaluator.EvoDTATask;
+import com.aarribas1.evodta.TrafficSwappingHeuristicGP;
+import com.aarribas1.evodta.TrafficSwappingHeuristicGP.GPStatus;
+import com.aarribas1.evodta.ecj.EvoDTAEvaluator.EvoDTAContext;
+import com.aarribas1.evodta.ecj.EvoDTAEvaluator.EvoDTATask;
 import rinde.jppf.ComputationTask;
 import ec.EvolutionState;
 import ec.gp.GPTree;
@@ -69,22 +69,28 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			TrafficSimulator sim;
 			TrafficSwappingHeuristicGP heuristic;
 			float cumulativeFitness = 0;
-			//first test
-			//sim  = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/toy_parfix.mat", 1.2, 0.004, 50, TrafficSimulator.VERBOSITY.SILENT);
+			
 			for(int network = 1;  network < 6; network++ ){
 				//simulate one network per iteration
 				switch(network){
-				case 1: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				case 2: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net2.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				case 3: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net3.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				case 4: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net4.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				case 5: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
-				default: sim = new TrafficSimulator("/Users/andresaan/Documents/MAI/Thesis/matlab/Exercise Final/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 1: sim = new TrafficSimulator("../files/networks/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 2: sim = new TrafficSimulator("../files/networks/net2.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 3: sim = new TrafficSimulator("../files/networks/net3.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 4: sim = new TrafficSimulator("../files/networks/net4.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 5: sim = new TrafficSimulator("../files/networks/net5.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				default: sim = new TrafficSimulator("../files/networks/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				}
 				
 				heuristic = new TrafficSwappingHeuristicGP();
 				heuristic.setupGenParams(sim, this);
-				sim.runDTA(300, heuristic);
+				switch(network){
+				case 1: 
+				case 2:
+				case 3:
+				case 4: sim.runDTA(500, 0.00015, heuristic); break;
+				case 5: sim.runDTA(1500, 0.0015, heuristic); break;
+				default: sim.runDTA(500, 0.00015, heuristic);
+				}
 				float tfitness = computeFitness(heuristic, sim); 
 				
 				if(tfitness == Float.MAX_VALUE ){
@@ -92,7 +98,12 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					break;
 				}
 				else{
-					cumulativeFitness += tfitness;
+					if(network == 5){
+						cumulativeFitness += tfitness*3;
+					}
+					else{
+						cumulativeFitness += tfitness;
+					}
 				}
 			}
 		//	sim.displayRouteFractionPerRouteInterval();
@@ -104,7 +115,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			}
 			else{
 				
-				fitness = cumulativeFitness / 5.0f;
+				fitness = cumulativeFitness / 7.0f;
 			}
 			setResult(new EvoDTAResult(fitness, taskData.getId()));
 //			dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
