@@ -42,7 +42,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 
 	private Double minDelta = null;
 	private Double maxDelta = null;
-
+	
 	public enum GPStatus {
 		GP_STATUS_NORMAL,
 		GP_STATUS_ABORTED,

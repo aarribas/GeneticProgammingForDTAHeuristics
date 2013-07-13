@@ -3,10 +3,11 @@ parent.0 = rinecj.params
 eval = com.aarribas1.evodta.ecj.EvoDTAEvaluator
 gp.fs.0 = com.aarribas1.evodta.ecj.EvoDTAFunctions
 
-seed.0 = 123
+seed.0 = 123456
+seed.1 = 234752
 
-pop.subpop.0.size 	= 101
-	generations 		= 1500
+pop.subpop.0.size 	= 500
+	generations 		= 100
 
 # either 'local' or 'distributed' (this can only be used if a JPPF server is setup, etc)
 eval.host = local

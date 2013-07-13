@@ -9,7 +9,7 @@ import rinde.ecj.GPFuncSet;
 import rinde.ecj.GenericFunctions.Add;
 import rinde.ecj.GenericFunctions.Constant;
 import rinde.ecj.GenericFunctions.Div;
-//import rinde.ecj.GenericFunctions.If4;
+import rinde.ecj.GenericFunctions.If4;
 import rinde.ecj.GenericFunctions.Mul;
 import rinde.ecj.GenericFunctions.Pow;
 import rinde.ecj.GenericFunctions.Sub;
@@ -24,7 +24,7 @@ public class EvoDTAFunctions extends GPFuncSet<EvoDTAContext> {
 	public Collection<GPFunc<EvoDTAContext>> create() {
 		return newArrayList(
 		/* GENERIC FUNCTIONS */
-	
+		new If4<EvoDTAContext>(), /* */
 				new Add<EvoDTAContext>(), /* */
 				new Sub<EvoDTAContext>(), /* */
 				new Div<EvoDTAContext>(), /* */

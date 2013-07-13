@@ -73,7 +73,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 			for(int network = 1;  network < 6; network++ ){
 				//simulate one network per iteration
 				switch(network){
-				case 1: sim = new TrafficSimulator("../files/networks/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
+				case 1: sim = new TrafficSimulator("../files/networks/net1.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.VERY_VERBOSE); break;
 				case 2: sim = new TrafficSimulator("../files/networks/net2.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				case 3: sim = new TrafficSimulator("../files/networks/net3.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
 				case 4: sim = new TrafficSimulator("../files/networks/net4.mat", 0.75, 0.0025, 50, TrafficSimulator.VERBOSITY.SILENT); break;
@@ -88,7 +88,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 				case 2:
 				case 3:
 				case 4: sim.runDTA(500, 0.00015, heuristic); break;
-				case 5: sim.runDTA(1500, 0.0015, heuristic); break;
+				case 5: sim.runDTA(1500, 0.0015, heuristic); break; //more iterations and a lower convergence objective -- network is far more demanding
 				default: sim.runDTA(500, 0.00015, heuristic);
 				}
 				float tfitness = computeFitness(heuristic, sim); 
@@ -98,6 +98,10 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					break;
 				}
 				else{
+					//sim.displayRouteFractionPerRouteInterval();
+					//sim.displayRouteTravelTimesPerRoute();
+					
+					System.out.println("net: " + network + " final gap: " + sim.getGap() + " iterations: " + sim.getIteration());
 					if(network == 5){
 						cumulativeFitness += tfitness*3;
 					}
@@ -106,8 +110,7 @@ public class EvoDTAEvaluator extends GPEvaluator<EvoDTATask, EvoDTAResult, GPPro
 					}
 				}
 			}
-		//	sim.displayRouteFractionPerRouteInterval();
-		//	sim.displayRouteTravelTimesPerRoute();
+		
 			
 			//temporal fitness
 			if (cumulativeFitness == Float.MAX_VALUE){
