@@ -165,6 +165,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 		}
 
 		//if the gap has been increasing for more than 10 iterations, it is time to abort
+		//this condition has to be deactivated when testing a single heuristic on real scenarios
 		if(increasingGapCounter > 10){
 			abort(GPStatus.GP_STATUS_ABORTED_INCREASING_GAP);
 		}
@@ -461,7 +462,7 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 								delta = -delta;
 
 								//=>compute delta ends here
-
+								
 								//correct the obtained delta to values that guarantee feasibility
 								if(delta > 0.0){
 
@@ -473,6 +474,10 @@ public class TrafficSwappingHeuristicGP extends TrafficSwappingHeuristic{
 									delta = -rtFrac;
 
 								}
+										
+								
+								
+								
 
 								tempRouteFrac = (rtFrac + delta);
 

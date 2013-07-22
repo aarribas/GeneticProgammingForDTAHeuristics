@@ -6,8 +6,8 @@ gp.fs.0 = com.aarribas1.evodta.ecj.EvoDTAFunctions
 seed.0 = 123456
 seed.1 = 234752
 
-pop.subpop.0.size 	= 500
-	generations 		= 100
+pop.subpop.0.size 	= 1
+	generations 		= 1
 
 # either 'local' or 'distributed' (this can only be used if a JPPF server is setup, etc)
 eval.host = local
